@@ -15,11 +15,20 @@
   display: none;
 }
 .marker-label {
-  color: black !important;
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-shadow: 0 0 1px black;
-  padding: 0.25rem;
-  background-color: white;
-  border-radius: 0.25rem;
+  color: white !important;
+  font-size: 2rem;
+  font-weight: 900 !important;
+  text-shadow: 0 0 1px white;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(215, 66, 55);
+  box-shadow: 0 0 5px black;
+  border-radius: 100%;
+}
+
+.marker-pickup {
+  background-color: rgb(234, 153, 8);
 }

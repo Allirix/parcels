@@ -1,3 +1,4 @@
+import { MarkerProps } from "@react-google-maps/api";
 import { FullDelivery, Route } from "../../app/types";
 
 type Position = {
@@ -69,9 +70,10 @@ const defaultMarker = () => ({
 
 export type MarkerIconType = typeof defaultMarkerValues;
 
-export const getMarkerIcon = ({ isDelivered, isPickup, isRouted }) => {
+export const getIcon = ({ isDelivered, isPickup, isRouted }) => {
   return {
     ...defaultMarkerValues,
+    scaledSize: new google.maps.Size(50, 50),
 
     ...(isDelivered
       ? deliveredMarker()
@@ -81,38 +83,20 @@ export const getMarkerIcon = ({ isDelivered, isPickup, isRouted }) => {
   };
 };
 
-export const getMarkerLabel = ({ isDelivered, isPickup, routeIdx }) => {
+export const getLabel = ({ isDelivered, isPickup, routeIdx }) => {
   if (routeIdx == -1) return undefined as google.maps.MarkerLabel;
 
-  return { text: routeIdx + 1 + "", className: "marker-label" };
+  return {
+    label: {
+      text: routeIdx + 1 + "",
+      className: `marker-label${isPickup ? " marker-pickup" : ""}`,
+    },
+  };
 };
 
 export type DeliveryMarker = FullDelivery & {
   icon?: MarkerIconType;
   label?: google.maps.MarkerLabel;
-  routeIdx: number;
-};
-
-export const addMarkerProps = (route) => {
-  return (delivery: FullDelivery) => {
-    const isDelivered = !!delivery.deliveredAt;
-    const isPickup = delivery.parcels.some((p) => p.type === "PICKUP");
-    const routeIdx = route.findIndex(
-      (addressId) => addressId === delivery.addressId
-    );
-
-    return {
-      ...delivery,
-      routeIdx,
-      icon: getMarkerIcon({
-        isDelivered,
-        isPickup,
-        isRouted: routeIdx > -1,
-      }),
-      label: getMarkerLabel({ isDelivered, isPickup, routeIdx }),
-      onClick: () => console.log(delivery),
-    };
-  };
 };
 
 export const getBoundedDeliveryMarkers = (

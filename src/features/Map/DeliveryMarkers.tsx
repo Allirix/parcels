@@ -2,25 +2,47 @@
 import { MarkerF, MarkerProps } from "@react-google-maps/api";
 import { useDeliveryList } from "../../app/selectors/deliveries.selector";
 import { useEffect, useState, useMemo } from "react";
-import { addMarkerProps, getBoundedDeliveryMarkers } from "./utils";
+import { getBoundedDeliveryMarkers, getIcon, getLabel } from "./utils";
 
-import { debounce } from "lodash";
-import { useRoute } from "../../app/selectors/route.selector";
-import { route } from "../../app/slices/initial/index";
+import debounce from "lodash/debounce";
+import { useRoute, useRouteActions } from "../../app/selectors/route.selector";
+import { FullDelivery } from "../../app/types";
 
 type DeliveryMarkersProps = {
   map: google.maps.Map;
 };
 
-export default function DeliveryMarkers({ map }: DeliveryMarkersProps) {
+function DeliveryMarkers({ map }: DeliveryMarkersProps) {
   const deliveries = useDeliveryList();
 
   const route = useRoute();
 
-  const deliveryMarkers = useMemo(
-    () => deliveries.map(addMarkerProps(route)),
-    [deliveries, route]
-  );
+  const actions = useRouteActions();
+
+  const deliveryMarkers = useMemo(() => {
+    return deliveries.map((delivery: FullDelivery) => {
+      const isDelivered = !!delivery.deliveredAt;
+      const isPickup = delivery.parcels.some((p) => p.type === "PICKUP");
+      const routeIdx = route.findIndex(
+        (addressId) => addressId === delivery.addressId
+      );
+
+      return {
+        ...delivery,
+        icon: getIcon({
+          isDelivered,
+          isPickup,
+          isRouted: routeIdx > -1,
+        }),
+        onClick: () => actions.addToTop(delivery),
+        onDblClick: () => actions.addToEnd(delivery),
+
+        ...(routeIdx === -1
+          ? {}
+          : getLabel({ isDelivered, isPickup, routeIdx })),
+      };
+    });
+  }, [actions, deliveries, route]);
 
   const [deliveriesInBounds, setDeliveriesInBounds] = useState(() =>
     getBoundedDeliveryMarkers(deliveryMarkers, map)
@@ -46,18 +68,15 @@ export default function DeliveryMarkers({ map }: DeliveryMarkersProps) {
       google.maps.event.removeListener(zoomListener);
       google.maps.event.removeListener(panListener);
     };
-  }, [deliveryMarkers, map, route]);
+  }, [deliveryMarkers, map]);
 
   return (
     <>
-      {deliveriesInBounds.map((deliveryMarker) => (
-        <MarkerF
-          onMouseDown={console.log}
-          onDrag={console.log}
-          key={deliveryMarker.addressId}
-          {...{ ...(deliveryMarker as MarkerProps) }}
-        />
+      {deliveriesInBounds.map((marker) => (
+        <MarkerF key={marker.addressId} {...{ ...(marker as MarkerProps) }} />
       ))}
     </>
   );
 }
+
+export default DeliveryMarkers;

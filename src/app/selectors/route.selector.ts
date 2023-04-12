@@ -9,7 +9,12 @@ import { useAppDispatch } from "../hooks";
 
 import { Delivery } from "../types";
 import { selectDeliveries } from "./deliveries.selector";
-import { addToRoute, removeFromRoute } from "../slices/route.slice";
+import {
+  addToEndOfRoute,
+  addToRoute,
+  addToTopOfRoute,
+  removeFromRoute,
+} from "../slices/route.slice";
 
 /* Selectors */
 export const getRoute = (state: RootState) => state.route;
@@ -33,6 +38,27 @@ export const useAddToRoute = () => {
     [dispatch]
   );
 };
+
+export const useRouteActions = () => {
+  const dispatch = useAppDispatch();
+
+  return {
+    addToTop: useCallback(
+      (delivery: Delivery) => dispatch(addToTopOfRoute(delivery)),
+      [dispatch]
+    ),
+    addToEnd: useCallback(
+      (delivery: Delivery) => dispatch(addToEndOfRoute(delivery)),
+      [dispatch]
+    ),
+    add: useCallback(
+      (delivery: Delivery, index: number) =>
+        dispatch(addToRoute({ delivery, index })),
+      [dispatch]
+    ),
+  };
+};
+
 export const useRemoveFromRoute = () => {
   const dispatch = useAppDispatch();
   return useCallback(
